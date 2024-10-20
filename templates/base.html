@@ -33,17 +33,17 @@
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'mobs' else '' }}" href="{{ url_for('mobs') }}">Mobs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'paddocks' else '' }}" href="{{ url_for('paddocks') }}">Paddocks</a>
+                      <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'stocks' else '' }}" href="{{ url_for('stocks') }}">Stocks</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'stock' else '' }}" href="{{ url_for('stock') }}">Stock</a>
+                        <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'paddocks' else '' }}" href="{{ url_for('paddocks') }}">Paddocks</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'move_mob' else '' }}" href="{{ url_for('move_mob') }}">Move Mob</a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'reset' else '' }}" href="{{ url_for('reset') }}" onclick="return confirm('Are you sure you want to reset the system? This action cannot be undone.')">Reset</a>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
         </div>

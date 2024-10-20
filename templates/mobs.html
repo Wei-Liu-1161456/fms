@@ -1,21 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Mobs{% endblock %}
 {% block content %}
-<h2 class="mb-4">Mobs</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Mob Name</th>
-            <th>Current Paddock</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for mob in mobs %}
-        <tr>
-            <td>{{ mob.name }}</td>
-            <td>{{ mob.paddock_name }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Mobs</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Mob ID</th>
+                        <th scope="col">Mob Name</th>
+                        <th scope="col">Current Paddock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mob in mobs %}
+                    <tr>
+                        <td>{{ mob.id }}</th>
+                        <td>{{ mob.name }}</td>
+                        <td>{{ mob.paddock_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

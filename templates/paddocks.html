@@ -1,39 +1,52 @@
 {% extends "base.html" %}
 {% block title %}Paddocks{% endblock %}
 {% block content %}
-<h2 class="mb-4">Paddocks</h2>
-<a href="{{ url_for('add_paddock') }}" class="btn btn-primary mb-3">Add New Paddock</a>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Area (ha)</th>
-            <th>DM per ha (kg)</th>
-            <th>Total DM (kg)</th>
-            <th>Current Mob</th>
-            <th>Stock Count</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for paddock in paddocks %}
-        <tr {% if paddock.dm_per_ha < 1500 %}class="table-danger"{% elif paddock.dm_per_ha < 1800 %}class="table-warning"{% endif %}>
-            <td>{{ paddock.name }}</td>
-            <td>{{ paddock.area }}</td>
-            <td>{{ paddock.dm_per_ha|round(2) }}</td>
-            <td>{{ paddock.total_dm|round(2) }}</td>
-            <td>{{ paddock.mob_name if paddock.mob_name else 'Empty' }}</td>
-            <td>{{ paddock.stock_count if paddock.stock_count else 0 }}</td>
-            <td>
-                <a href="{{ url_for('edit_paddock', id=paddock.id) }}" class="btn btn-sm btn-secondary">Edit</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<div class="mt-3">
-    <p><span class="badge bg-warning">Yellow</span>: DM/ha below 1800 kg</p>
-    <p><span class="badge bg-danger">Red</span>: DM/ha below 1500 kg</p>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Paddocks</h2>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-start mb-3">
+            <a href="{{ url_for('add_paddock') }}" class="btn btn-primary me-2">Add New Paddock</a>
+            <a href="{{ url_for('next_day') }}" class="btn btn-primary me-2">Move to Next Day</a>
+            <a href="{{ url_for('reset') }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to reset the date? This action cannot be undone.')">Reset Date</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Area (ha)</th>
+                        <th scope="col">DM per ha (kg)</th>
+                        <th scope="col">Total DM (kg)</th>
+                        <th scope="col">Current Mob</th>
+                        <th scope="col">Stock Count</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paddock in paddocks %}
+                    <tr {% if paddock.dm_per_ha < 1500 %}class="table-danger"{% elif paddock.dm_per_ha < 1800 %}class="table-warning"{% endif %}>
+                        <td>{{ paddock.name }}</td>
+                        <td>{{ paddock.area }}</td>
+                        <td>{{ paddock.dm_per_ha|round(2) }}</td>
+                        <td>{{ paddock.total_dm|round(2) }}</td>
+                        <td>{{ paddock.mob_name if paddock.mob_name else '' }}</td>
+                        <td>{{ paddock.stock_count if paddock.stock_count else 0 }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_paddock', id=paddock.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            <p><span class="badge bg-warning">Yellow</span>: DM/ha below 1800 kg</p>
+            <p><span class="badge bg-danger">Red</span>: DM/ha below 1500 kg</p>
+        </div>
+    </div>
 </div>
-<a href="{{ url_for('next_day') }}" class="btn btn-primary mt-3">Advance to Next Day</a>
 {% endblock %}

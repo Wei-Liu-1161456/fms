@@ -75,20 +75,30 @@ def paddocks():
     paddocks = cursor.fetchall()
     return render_template("paddocks.html", paddocks=paddocks)
 
-@app.route("/stock")
-def stock():
-    """Retrieves all stock with associated mob and paddock information and renders the stock page."""
+@app.route("/stocks")
+def stocks():
+    """
+    Retrieves all stock (animals), grouped by mob, with mob details and animal details.
+    Mobs are in alphabetical order, and animals are in ID order within each mob.
+    """
     cursor = getCursor()
     cursor.execute("""
-        SELECT m.name AS mob_name, s.id, s.dob, s.weight, p.name AS paddock_name,
-               AVG(s.weight) OVER (PARTITION BY m.id) AS avg_weight
-        FROM stock s
-        JOIN mobs m ON s.mob_id = m.id
+        SELECT 
+            m.name AS mob_name, 
+            p.name AS paddock_name,
+            COUNT(s.id) AS stock_count,          -- Total count of animals in the mob
+            AVG(s.weight) AS avg_weight,         -- Average weight of the mob
+            s.id AS stock_id,                    -- Animal's stock ID
+            s.dob,                               -- Animal's date of birth
+            s.weight                             -- Animal's weight
+        FROM mobs m
         JOIN paddocks p ON m.paddock_id = p.id
-        ORDER BY m.name, s.id
+        LEFT JOIN stock s ON m.id = s.mob_id
+        GROUP BY m.name, p.name, s.id, s.dob, s.weight  -- Group by mob and animal details
+        ORDER BY m.name, s.id                        -- Order by mob name and then animal ID
     """)
-    stock = cursor.fetchall()
-    return render_template("stock.html", stock=stock)
+    stocks = cursor.fetchall()
+    return render_template("stocks.html", stocks=stocks, current_date=get_date())
 
 @app.route("/next_day")
 def next_day():
