@@ -2,11 +2,45 @@
 {% block title %}FMS - Home{% endblock %}
 {% block content %}
 
-<h1 class="mb-4">Welcome to Farm Management Simulator</h1>
+<style>
+    .full-screen-image {
+        position: relative;
+        height: calc(100vh - 116px); /* Adjust this value based on your navbar height */
+        overflow: hidden;
+    }
+    .full-screen-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .centered-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
+        padding: 20px;
+    }
+    .welcome-text {
+        font-size: 3vw;
+        color: #ffffff;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        background-color: rgba(0,0,0,0.5);
+        padding: 20px;
+        border-radius: 10px;
+    }
+    @media (max-width: 768px) {
+        .welcome-text {
+            font-size: 6vw;
+        }
+    }
+</style>
 
-<div class="row">
-    <div class="col-md-6">
-        <img src="{{ url_for('static', filename='cow-5287350_1280.jpg') }}" alt="Farm landscape" class="img-fluid mb-3">
+<div class="full-screen-image">
+    <img src="{{ url_for('static', filename='cow-5287350_1280.jpg') }}" alt="Farm landscape">
+    <div class="centered-text">
+        <h1 class="welcome-text">Welcome to Farm Management Simulator</h1>
     </div>
 </div>
 
