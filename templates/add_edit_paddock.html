@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{% if paddock %}Edit Paddock{% else %}Add Paddock{% endif %}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{% if paddock %}Edit Paddock{% else %}Add Paddock{% endif %}</h2>
+<form method="POST">
+    <div class="form-group">
+        <label for="name">Paddock Name:</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ paddock.name if paddock else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="area">Area (ha):</label>
+        <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.01" value="{{ paddock.area if paddock else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="dm_per_ha">DM per ha (kg):</label>
+        <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.01" value="{{ paddock.dm_per_ha if paddock else '' }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">{% if paddock %}Update{% else %}Add{% endif %} Paddock</button>
+</form>
+{% endblock %}

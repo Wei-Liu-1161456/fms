@@ -1,17 +1,27 @@
 -- Can drop the schema in PythonAnywhere SQL, but can't recreate it (have to use Databases page).
 -- Instead, this query drops the tables and then recreates and populates them.
 
+DROP TABLE IF EXISTS curr_date;
 DROP TABLE IF EXISTS stock;
 DROP TABLE IF EXISTS mobs;
 DROP TABLE IF EXISTS paddocks;
 
+CREATE TABLE curr_date (
+    curr_date DATE NOT NULL,
+    PRIMARY KEY (curr_date)
+);
+
+INSERT INTO curr_date VALUES
+	("2024-10-29")
+;
+
 CREATE TABLE paddocks (
-	id int NOT NULL AUTO_INCREMENT,
-	name varchar(50) NOT NULL,
-	area float(2) not null,
-    dm_per_ha float(2) not null,
-	total_dm float(2) default null,
-	PRIMARY KEY (id)
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    area FLOAT(2) NOT NULL,
+    dm_per_ha FLOAT(2) NOT NULL,
+    total_dm FLOAT(2) DEFAULT NULL,
+    PRIMARY KEY (id)
 );
 
 INSERT INTO paddocks VALUES
@@ -19,39 +29,35 @@ INSERT INTO paddocks VALUES
 	(4, "Rear 1", 1.23, 2300, 1.23*2300),
 	(2, "Rear 2", 1.15, 1900, 1.15*1900),
 	(12, "Barn", 0.95, 1750, 0.95*1750)
-; 
+;
 
 CREATE TABLE mobs (
-	id int NOT NULL AUTO_INCREMENT,
-	name varchar(50) DEFAULT NULL,
-	paddock_id int not null,
-	PRIMARY KEY (id),
-    UNIQUE INDEX paddock_idx (paddock_id),	-- Ensures that paddock_id is unique
-	CONSTRAINT fk_paddock
-		FOREIGN KEY (paddock_id)
-		REFERENCES paddocks(id)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(50) DEFAULT NULL,
+    paddock_id INT NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE INDEX paddock_idx (paddock_id),
+    CONSTRAINT fk_paddock FOREIGN KEY (paddock_id)
+        REFERENCES paddocks (id)
+        ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 INSERT INTO mobs VALUES
 	(1,"Mob 1", 4),
 	(7,"Mob 2", 1),
 	(2,"Mob 3", 2)
-; 
+;
 
 CREATE TABLE stock (
-	id int NOT NULL AUTO_INCREMENT,
-    mob_id int default null,
-	dob date NOT NULL,
-	weight float(2) not null,
-	PRIMARY KEY (id),
-	CONSTRAINT fk_mob
-		FOREIGN KEY (mob_id)
-		REFERENCES mobs(id)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-	);
+    id INT NOT NULL AUTO_INCREMENT,
+    mob_id INT DEFAULT NULL,
+    dob DATE NOT NULL,
+    weight FLOAT(2) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_mob FOREIGN KEY (mob_id)
+        REFERENCES mobs (id)
+        ON DELETE NO ACTION ON UPDATE NO ACTION
+);
 
 INSERT INTO stock VALUES
 	(1001, 1, '2022-07-25', 586.3),

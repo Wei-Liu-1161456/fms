@@ -1,22 +1,21 @@
 {% extends "base.html" %}
-
 {% block title %}Mobs{% endblock %}
-
 {% block content %}
-
-<h2>Mobs</h2>
-
-    <table>   
+<h2 class="mb-4">Mobs</h2>
+<table class="table table-striped">
+    <thead>
         <tr>
-            <th>Mob ID</th>
             <th>Mob Name</th>
+            <th>Current Paddock</th>
         </tr>
-        {% for mob in mobs %}  
-            <tr>
-                <td>{{mob[0]}}</td>  
-                <td>{{mob[1]}}</td>  
-            </tr>
-        {% endfor %}    
-    </table>
-
+    </thead>
+    <tbody>
+        {% for mob in mobs %}
+        <tr>
+            <td>{{ mob.name }}</td>
+            <td>{{ mob.paddock_name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

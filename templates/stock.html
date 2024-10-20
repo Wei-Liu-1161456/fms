@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Stock{% endblock %}
+{% block content %}
+<h2 class="mb-4">Stock</h2>
+{% set current_mob = None %}
+{% for animal in stock %}
+    {% if animal.mob_name != current_mob %}
+        {% if current_mob %}</tbody></table>{% endif %}
+        <h3 class="mt-4">{{ animal.mob_name }} ({{ animal.paddock_name }})</h3>
+        <p>Average Weight: {{ animal.avg_weight|round(2) }} kg</p>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date of Birth</th>
+                    <th>Age (years)</th>
+                    <th>Weight (kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+        {% set current_mob = animal.mob_name %}
+    {% endif %}
+    <tr>
+        <td>{{ animal.id }}</td>
+        <td>{{ animal.dob.strftime('%Y-%m-%d') }}</td>
+        <td>{{ ((get_date() - animal.dob).days / 365.25)|round(1) }}</td>
+        <td>{{ animal.weight }}</td>
+    </tr>
+{% endfor %}
+{% if current_mob %}</tbody></table>{% endif %}
+{% endblock %}
