@@ -46,11 +46,7 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
-    </div>
-
-    <!-- Alert messages moved to the bottom of the page -->
+    <!-- Alert messages -->
     <div class="container mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -59,6 +55,10 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

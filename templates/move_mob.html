@@ -12,7 +12,7 @@
         </select>
     </div>
     <div class="form-group">
-        <label for="new_paddock_id">Select New Paddock:</label>
+        <label for="new_paddock_id">Select Available Paddock:</label>
         <select name="new_paddock_id" id="new_paddock_id" class="form-control" required>
             {% for paddock in paddocks %}
                 <option value="{{ paddock.id }}">{{ paddock.name }}</option>
