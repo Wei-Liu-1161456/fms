@@ -1,24 +1,71 @@
 {% extends "base.html" %}
 {% block title %}FMS - Move Mob{% endblock %}
 {% block content %}
-<h2 class="mb-4">Move Mob</h2>
-<form method="POST">
-    <div class="form-group">
-        <label for="mob_id">Select Mob:</label>
-        <select name="mob_id" id="mob_id" class="form-control" required>
-            {% for mob in mobs %}
-                <option value="{{ mob.id }}">{{ mob.name }}</option>
-            {% endfor %}
-        </select>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Move Mob</h2>
     </div>
-    <div class="form-group">
-        <label for="new_paddock_id">Select Available Paddock:</label>
-        <select name="new_paddock_id" id="new_paddock_id" class="form-control" required>
-            {% for paddock in paddocks %}
-                <option value="{{ paddock.id }}">{{ paddock.name }}</option>
-            {% endfor %}
-        </select>
+    <div class="card-body">
+        <div class="table-responsive">
+            <form method="POST">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Select Mob</th>
+                            <th scope="col">Select Available Paddock</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-light">
+                            <td>
+                                <select name="mob_id" id="mob_id" class="form-select" required>
+                                    {% for mob in mobs %}
+                                        <option value="{{ mob.id }}">{{ mob.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="new_paddock_id" id="new_paddock_id" class="form-select" required>
+                                    {% for paddock in paddocks %}
+                                        <option value="{{ paddock.id }}">{{ paddock.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary me-2">Move Mob</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+        <!-- Current Distribution Section -->
+        <div class="mt-4">
+            <h4 class="mb-3">Current Distribution</h4>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Paddock Name</th>
+                            <th scope="col">Mob Name</th>
+                            <th scope="col">Stock Count</th>
+                            <th scope="col">Paddock DM/ha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in current_distribution %}
+                        <tr {% if item.dm_per_ha < 1500 %}class="table-danger"{% elif item.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
+                            <td>{{ item.paddock_name }}</td>
+                            <td>{{ item.mob_name if item.mob_name else '' }}</td>
+                            <td>{{ item.stock_count if item.stock_count else '0' }}</td>
+                            <td>{{ item.dm_per_ha|round(2) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary">Move Mob</button>
-</form>
+</div>
 {% endblock %}

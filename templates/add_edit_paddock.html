@@ -1,20 +1,79 @@
 {% extends "base.html" %}
 {% block title %}{% if paddock %}FMS - Edit Paddock{% else %}FMS - Add Paddock{% endif %}{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">{% if paddock %}Edit Paddock{% else %}Add Paddock{% endif %}</h2>
-<form method="POST">
-    <div class="form-group">
-        <label for="name">Paddock Name:</label>
-        <input type="text" class="form-control" id="name" name="name" value="{{ paddock.name if paddock else '' }}" required>
-    </div>
-    <div class="form-group">
-        <label for="area">Area (ha):</label>
-        <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.01" value="{{ paddock.area if paddock else '' }}" required>
-    </div>
-    <div class="form-group">
-        <label for="dm_per_ha">DM per ha (kg):</label>
-        <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.01" value="{{ paddock.dm_per_ha if paddock else '' }}" required>
-    </div>
-    <button type="submit" class="btn btn-primary">{% if paddock %}Update{% else %}Add{% endif %} Paddock</button>
-</form>
+<div class="card shadow-sm">
+   <div class="card-header bg-primary text-white">
+       <h2 class="mb-0">{% if paddock %}Edit Paddock{% else %}Add Paddock{% endif %}</h2>
+   </div>
+   <div class="card-body">
+       <!-- Add name requirements info -->
+       <div class="alert alert-info mb-4">
+           <h5 class="alert-heading mb-2">Paddock Name Requirements:</h5>
+           <ul class="mb-0">
+               <li>Must start with letters (e.g., "Barn", "Front")</li>
+               <li>Can optionally include numbers at the end (e.g., "Barn11" or "Barn 11")</li>
+               <li>No special characters or multiple spaces allowed</li>
+               <li>Case sensitive (e.g., "Barn" and "barn" are treated as different names)</li>
+           </ul>
+       </div>
+
+       <div class="table-responsive">
+           <form method="POST">
+               <table class="table table-hover align-middle">
+                   <thead class="table-light">
+                       <tr>
+                           <th scope="col">Field</th>
+                           <th scope="col">Value</th>
+                       </tr>
+                   </thead>
+                   <tbody>
+                    <tr class="table-light">
+                        <td>
+                            <label for="id">ID:</label>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input type="text" class="form-control bg-light" value="{{ paddock.id if paddock else next_id }}" disabled>
+                                <span class="input-group-text text-muted"><small>Auto-increment</small></span>
+                            </div>
+                        </td>
+                    </tr>
+                       <tr class="table-light">
+                           <td>
+                               <label for="name">Paddock Name:</label>
+                           </td>
+                           <td>
+                               <input type="text" class="form-control" id="name" name="name" value="{{ paddock.name if paddock else '' }}" required>
+                           </td>
+                       </tr>
+                       <tr class="table-light">
+                           <td>
+                               <label for="area">Area (ha):</label>
+                           </td>
+                           <td>
+                               <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.01" value="{{ paddock.area if paddock else '' }}" required>
+                           </td>
+                       </tr>
+                       <tr class="table-light">
+                           <td>
+                               <label for="dm_per_ha">DM per ha (kg):</label>
+                           </td>
+                           <td>
+                               <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.01" value="{{ paddock.dm_per_ha if paddock else '' }}" required>
+                           </td>
+                       </tr>
+                       <tr class="table-light">
+                           <td></td>
+                           <td>
+                               <button type="submit" class="btn btn-primary me-2">{% if paddock %}Update{% else %}Add{% endif %} Paddock</button>
+                               <a href="{{ url_for('paddocks') }}" class="btn btn-secondary">Cancel</a>
+                           </td>
+                       </tr>
+                   </tbody>
+               </table>
+           </form>
+       </div>
+   </div>
+</div>
 {% endblock %}

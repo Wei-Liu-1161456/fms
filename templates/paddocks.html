@@ -10,7 +10,7 @@
         <div class="d-flex justify-content-start mb-3">
             <a href="{{ url_for('add_paddock') }}" class="btn btn-primary me-2">Add New Paddock</a>
             <a href="{{ url_for('next_day') }}" class="btn btn-primary me-2">Move to Next Day</a>
-            <a href="{{ url_for('reset') }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to reset the date? This action cannot be undone.')">Reset Date</a>
+            <a href="{{ url_for('reset') }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to reset the date? This action cannot be undone.')">Reset</a>
         </div>
 
         <div class="table-responsive">
@@ -50,7 +50,7 @@
                 <tr>
                     <td class="table-warning" width="50"></td>
                     <td>
-                        DM/ha below 1800 kg<br>
+                        DM/ha between 1500 kg and less than 1800 kg<br>
                         <small class="text-muted">Warning: Consider reducing grazing pressure or moving stock to another paddock</small>
                     </td>
                 </tr>
