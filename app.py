@@ -121,8 +121,7 @@ def next_day():
             LEFT JOIN mobs m ON p.id = m.paddock_id
             LEFT JOIN (SELECT mob_id, COUNT(*) as stock_count FROM stock GROUP BY mob_id) s ON m.id = s.mob_id
             SET p.total_dm = p.total_dm + (p.area * %s) - COALESCE(s.stock_count * %s, 0),
-                p.dm_per_ha = (p.total_dm + (p.area * %s) - COALESCE(s.stock_count * %s, 0)) / p.area
-        """, (pasture_growth_rate, stock_consumption_rate, pasture_growth_rate, stock_consumption_rate))
+                p.dm_per_ha = p.total_dm / p.area""", (pasture_growth_rate, stock_consumption_rate))
         
         # Update current date
         cursor.execute("UPDATE curr_date SET curr_date = %s", (new_date,))
