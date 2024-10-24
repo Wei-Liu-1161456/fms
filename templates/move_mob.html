@@ -18,21 +18,21 @@
                     </thead>
                     <tbody>
                         <tr class="table-light">
-                            <td>
-                                <select name="mob_id" id="mob_id" class="form-select" required>
+                            <td class="col-4">
+                                <select name="mob_id" class="form-select" required>
                                     {% for mob in mobs %}
                                         <option value="{{ mob.id }}">{{ mob.name }}</option>
                                     {% endfor %}
                                 </select>
                             </td>
-                            <td>
-                                <select name="new_paddock_id" id="new_paddock_id" class="form-select" required>
+                            <td class="col-4">
+                                <select name="new_paddock_id" class="form-select" required>
                                     {% for paddock in paddocks %}
                                         <option value="{{ paddock.id }}">{{ paddock.name }}</option>
                                     {% endfor %}
                                 </select>
                             </td>
-                            <td>
+                            <td class="col-4">
                                 <button type="submit" class="btn btn-primary me-2">Move Mob</button>
                             </td>
                         </tr>
