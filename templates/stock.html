@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}stocks{% endblock %}
+{% block title %}Stock{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
     {% set current_mob = namespace(name=None) %}
     
-    {# Sort stocks first by mob_name and then by stock_id to meet requirements #}
-    {% set sorted_stocks = stocks|sort(attribute='mob_name') %}
-    {% set sorted_stocks_by_mob = sorted_stocks|groupby('mob_name') %}
+    {# Sort stock first by mob_name and then by stock_id to meet requirements #}
+    {% set sorted_stock = stock|sort(attribute='mob_name') %}
+    {% set sorted_stock_by_mob = sorted_stock|groupby('mob_name') %}
 
     {# Loop over mobs (grouped by mob_name) #}
-    {% for mob_name, animals in sorted_stocks_by_mob %}
+    {% for mob_name, animals in sorted_stock_by_mob %}
         {# Sort animals within each mob by stock_id #}
         {% set animals_sorted = animals|sort(attribute='stock_id') %}
         
@@ -32,8 +32,8 @@
 
                 {# Table for displaying stock details #}
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
+                    <table class="table table-hover">  {# Remove table-striped class to have consistent colors #}
+                        <thead class="table-light">
                             <tr>
                                 <th>Stock ID</th> {# Display Stock ID prominently #}
                                 <th>Age (years)</th>
@@ -43,7 +43,7 @@
                         <tbody>
                             {# Loop through each animal in the mob and display its details #}
                             {% for animal in animals_sorted %}
-                                <tr>
+                                <tr class="table-light">  {# Set default color to table-light #}
                                     <td>{{ animal.stock_id }}</td> {# Stock ID prominently shown #}
                                     <td>{{ ((current_date - animal.dob).days / 365.25)|round(1) }}</td>
                                     <td>{{ animal.weight }}</td>

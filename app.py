@@ -52,7 +52,7 @@ def mobs():
     """Retrieves all mobs with their associated paddock names and renders the mobs page."""
     cursor = getCursor()
     cursor.execute("""
-        SELECT m.id, m.name, p.name AS paddock_name 
+        SELECT m.name, p.name AS paddock_name  # removed m.id
         FROM mobs m 
         JOIN paddocks p ON m.paddock_id = p.id 
         ORDER BY m.name
@@ -75,8 +75,8 @@ def paddocks():
     paddocks = cursor.fetchall()
     return render_template("paddocks.html", paddocks=paddocks)
 
-@app.route("/stocks")
-def stocks():
+@app.route("/stock")
+def stock():
     """
     Retrieves all stock (animals), grouped by mob, with mob details and animal details.
     Mobs are in alphabetical order, and animals are in ID order within each mob.
@@ -97,8 +97,8 @@ def stocks():
         GROUP BY m.name, p.name, s.id, s.dob, s.weight  -- Group by mob and animal details
         ORDER BY m.name, s.id                        -- Order by mob name and then animal ID
     """)
-    stocks = cursor.fetchall()
-    return render_template("stocks.html", stocks=stocks, current_date=get_date())
+    stock = cursor.fetchall()
+    return render_template("stock.html", stock=stock, current_date=get_date())
 
 @app.route("/next_day")
 def next_day():
@@ -123,7 +123,7 @@ def next_day():
         cursor.execute("UPDATE curr_date SET curr_date = %s", (new_date,))
         
         db_connection.commit()
-        flash(f"Advanced to next day: {new_date.strftime('%d %B %Y')}")
+        flash(f"Advanced to next day: {new_date.strftime('%d %B %Y')}", "success")
     except mysql.connector.Error as err:
         db_connection.rollback()
         flash(f"Failed to advance to next day: {err}", "error")

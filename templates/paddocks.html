@@ -13,7 +13,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle">
+            <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
                         <th scope="col">Name</th>
@@ -27,7 +27,7 @@
                 </thead>
                 <tbody>
                     {% for paddock in paddocks %}
-                    <tr {% if paddock.dm_per_ha < 1500 %}class="table-danger"{% elif paddock.dm_per_ha < 1800 %}class="table-warning"{% endif %}>
+                    <tr {% if paddock.dm_per_ha < 1500 %}class="table-danger"{% elif paddock.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
                         <td>{{ paddock.name }}</td>
                         <td>{{ paddock.area }}</td>
                         <td>{{ paddock.dm_per_ha|round(2) }}</td>

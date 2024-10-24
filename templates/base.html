@@ -33,7 +33,7 @@
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'mobs' else '' }}" href="{{ url_for('mobs') }}">Mobs</a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'stocks' else '' }}" href="{{ url_for('stocks') }}">Stocks</a>
+                      <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'stock' else '' }}" href="{{ url_for('stock') }}">Stock</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'paddocks' else '' }}" href="{{ url_for('paddocks') }}">Paddocks</a>
@@ -41,14 +41,16 @@
                     <li class="nav-item">
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'move_mob' else '' }}" href="{{ url_for('move_mob') }}">Move Mob</a>
                     </li>
-                    <!-- <li class="nav-item">
-                        <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'reset' else '' }}" href="{{ url_for('reset') }}" onclick="return confirm('Are you sure you want to reset the system? This action cannot be undone.')">Reset</a>
-                    </li> -->
                 </ul>
             </div>
         </div>
     </nav>
 
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Alert messages moved to the bottom of the page -->
     <div class="container mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -57,8 +59,6 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-
-        {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
