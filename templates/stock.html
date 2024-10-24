@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Stock{% endblock %}
+{% block title %}FMS - Stock{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -8,7 +8,7 @@
     {# Sort stock first by mob_name and then by stock_id to meet requirements #}
     {% set sorted_stock = stock|sort(attribute='mob_name') %}
     {% set sorted_stock_by_mob = sorted_stock|groupby('mob_name') %}
-
+    
     {# Loop over mobs (grouped by mob_name) #}
     {% for mob_name, animals in sorted_stock_by_mob %}
         {# Sort animals within each mob by stock_id #}
@@ -25,17 +25,18 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div><strong>Paddock:</strong> {{ animals[0].paddock_name }}</div>
                     <div><strong>Number of Stock:</strong> {{ animals|length }}</div>
-                    <div><strong>Average Weight:</strong> 
+                    <div><strong>Average Weight:</strong>
                         {{ (animals|map(attribute='weight')|sum / animals|length)|round(2) }} kg
                     </div>
                 </div>
-
+                
                 {# Table for displaying stock details #}
                 <div class="table-responsive">
-                    <table class="table table-hover">  {# Remove table-striped class to have consistent colors #}
+                    <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Stock ID</th> {# Display Stock ID prominently #}
+                                <th>Stock ID</th>
+                                <th>Birth Date</th>
                                 <th>Age (years)</th>
                                 <th>Weight (kg)</th>
                             </tr>
@@ -43,9 +44,10 @@
                         <tbody>
                             {# Loop through each animal in the mob and display its details #}
                             {% for animal in animals_sorted %}
-                                <tr class="table-light">  {# Set default color to table-light #}
-                                    <td>{{ animal.stock_id }}</td> {# Stock ID prominently shown #}
-                                    <td>{{ ((current_date - animal.dob).days / 365.25)|round(1) }}</td>
+                                <tr class="table-light">
+                                    <td>{{ animal.stock_id }}</td>
+                                    <td>{{ animal.dob.strftime('%d-%m-%Y') }}</td>
+                                    <td>{{ ((current_date - animal.dob).days / 365)|round(2) }}</td>
                                     <td>{{ animal.weight }}</td>
                                 </tr>
                             {% endfor %}

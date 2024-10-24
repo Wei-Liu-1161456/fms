@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Paddocks{% endblock %}
+
 {% block content %}
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
@@ -44,8 +45,30 @@
         </div>
 
         <div class="mt-3">
-            <p><span class="badge bg-warning">Yellow</span>: DM/ha below 1800 kg</p>
-            <p><span class="badge bg-danger">Red</span>: DM/ha below 1500 kg</p>
+            <p>DM/ha (Dry Matter per Hectare): Measures available pasture in kilograms of dry matter per hectare.</p>
+            <table class="table table-sm">
+                <tr>
+                    <td class="table-warning" width="50"></td>
+                    <td>
+                        DM/ha below 1800 kg<br>
+                        <small class="text-muted">Warning: Consider reducing grazing pressure or moving stock to another paddock</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="table-danger" width="50"></td>
+                    <td>
+                        DM/ha below 1500 kg<br>
+                        <small class="text-muted">Critical: Urgent action required - Move stock immediately to prevent overgrazing</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="table-light" width="50"></td>
+                    <td>
+                        DM/ha above 1800 kg<br>
+                        <small class="text-muted">Normal: Suitable for grazing</small>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>
