@@ -31,7 +31,7 @@
                 <tbody>
                     {% for paddock in paddocks %}
                     <!-- Row color based on DM/ha value for easy identification -->
-                    <tr {% if paddock.dm_per_ha < 1500 %}class="table-danger"{% elif paddock.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
+                    <tr class="{% if paddock.dm_per_ha < 1500 %}table-danger{% elif paddock.dm_per_ha < 1800 %}table-warning{% else %}table-light{% endif %}">
                         <td>{{ paddock.name }}</td>
                         <td>{{ paddock.area }}</td>
                         <td>{{ paddock.dm_per_ha|round(2) }}</td>

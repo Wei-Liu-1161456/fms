@@ -4,6 +4,7 @@ import mysql.connector
 import connect
 import re
 from pathlib import Path
+from decimal import Decimal, ROUND_HALF_UP
 
 app = Flask(__name__)
 app.secret_key = 'COMP636 S2'
@@ -52,6 +53,18 @@ def validate_paddock_name(name, id=None):
     """
     Validates paddock name format and uniqueness.
     
+    Rules:
+    1. Must start with one or more letters
+    2. Can optionally end with numbers (with or without a single space before numbers)
+    3. Cannot have leading or trailing spaces
+    4. Cannot have multiple consecutive spaces
+    5. Cannot contain special characters
+    6. Name must be unique (case sensitive)
+    
+    Examples:
+    Valid: "Bar", "Bar11", "Bar 11"
+    Invalid: "Bar-", ".Bar", "Bar.", "11Bar", "Bar  11", " Bar", "Bar "
+    
     Args:
         name (str): Paddock name to validate
         id (int, optional): Paddock ID for edit operations
@@ -61,19 +74,28 @@ def validate_paddock_name(name, id=None):
     """
     cursor = getCursor()
     
-    if not re.match(r'^[a-zA-Z]+(?:\s?\d+)?$', name.strip()):
+    # Remove leading and trailing spaces and check if multiple spaces exist
+    cleaned_name = name.strip()
+    if cleaned_name != name:
+        return False, "Paddock name cannot have leading or trailing spaces."
+    
+    if "  " in name:  # Check for multiple consecutive spaces
+        return False, "Paddock name cannot contain multiple consecutive spaces."
+    
+    # Validate format: must start with letters, can only end with optional numbers
+    if not re.match(r'^[a-zA-Z]+(?:\s?\d+)?$', cleaned_name):
         return False, "Paddock name must start with letters and can optionally include numbers at the end."
     
-    # Check name uniqueness
+    # Check name uniqueness (case sensitive)
     query = "SELECT name FROM paddocks WHERE BINARY name = %s"
-    params = [name]
+    params = [cleaned_name]
     if id:
         query += " AND id != %s"
         params.append(id)
         
     cursor.execute(query, tuple(params))
     if cursor.fetchone():
-        return False, f"A paddock named '{name}' already exists."
+        return False, f"A paddock named '{cleaned_name}' already exists."
         
     return True, ""
 
@@ -289,7 +311,7 @@ def add_paddock():
                 VALUES (%s, %s, %s, %s)
             """, (name, area, dm_per_ha, total_dm))
             db_connection.commit()
-            flash("New paddock added successfully.", "success")
+            flash(f"Paddock '{name}' added successfully.", "success")
             return redirect(url_for('paddocks'))
             
         except ValueError as e:
@@ -304,6 +326,8 @@ def add_paddock():
     
     # GET request: show the form
     return render_template("add_edit_paddock.html")
+
+from decimal import Decimal, ROUND_HALF_UP
 
 @app.route("/edit_paddock/<int:id>", methods=['GET', 'POST'])
 def edit_paddock(id):
@@ -320,9 +344,10 @@ def edit_paddock(id):
     if request.method == 'POST':
         name = request.form['name']
         try:
-            area = float(request.form['area'])
-            dm_per_ha = float(request.form['dm_per_ha'])
-            total_dm = area * dm_per_ha if area > 0 and dm_per_ha > 0 else 0
+            # Convert string inputs to Decimal for precise calculation
+            area = Decimal(request.form['area']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            dm_per_ha = Decimal(request.form['dm_per_ha']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if area > 0 and dm_per_ha > 0 else Decimal('0')
             
             if area <= 0 or dm_per_ha <= 0:
                 raise ValueError("Area and DM per ha must be positive numbers")
@@ -332,23 +357,41 @@ def edit_paddock(id):
             if not is_valid:
                 flash(error_message, "error")
                 return render_template("add_edit_paddock.html", 
-                                    paddock={'name': name, 'area': area, 
-                                            'dm_per_ha': dm_per_ha})
+                                    paddock={'id': id, 'name': name, 
+                                            'area': str(area), 
+                                            'dm_per_ha': str(dm_per_ha)})
             
+            # Get current paddock data to check for changes
+            cursor.execute("SELECT * FROM paddocks WHERE id = %s", (id,))
+            current_paddock = cursor.fetchone()
+            
+            # Convert current values to Decimal for comparison
+            current_area = Decimal(str(current_paddock['area'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            current_dm_per_ha = Decimal(str(current_paddock['dm_per_ha'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            
+            # Check if any values have changed
+            if (name == current_paddock['name'] and 
+                area == current_area and 
+                dm_per_ha == current_dm_per_ha):
+                flash(f"No changes were made to paddock '{name}'.", "success")
+                return redirect(url_for('paddocks'))
+            
+            # Update paddock if changes were made
             cursor.execute("""
                 UPDATE paddocks
                 SET name = %s, area = %s, dm_per_ha = %s, total_dm = %s
                 WHERE id = %s
-            """, (name, area, dm_per_ha, total_dm, id))
+            """, (name, float(area), float(dm_per_ha), float(total_dm), id))
             db_connection.commit()
-            flash("Paddock updated successfully.", "success")
+            flash(f"Paddock '{name}' updated successfully.", "success")
             return redirect(url_for('paddocks'))
             
-        except ValueError as e:
+        except (ValueError, decimal.InvalidOperation) as e:
             flash(str(e), "error")
             return render_template("add_edit_paddock.html", 
-                                paddock={'name': name, 'area': area, 
-                                        'dm_per_ha': dm_per_ha})
+                                paddock={'id': id, 'name': name, 
+                                        'area': request.form['area'], 
+                                        'dm_per_ha': request.form['dm_per_ha']})
         except mysql.connector.Error as err:
             db_connection.rollback()
             flash(f"Failed to update paddock: {err}", "error")

@@ -2,12 +2,12 @@
 {% block title %}FMS - Home{% endblock %}
 {% block content %}
 <!-- Hero section with background image -->
-<div class="position-relative overflow-hidden" style="height: 100vh;">
+<div class="position-relative overflow-hidden vh-100">
     <!-- Background image -->
-    <img src="{{ url_for('static', filename='cow-5287350_1280.jpg') }}" class="w-100 h-100" style="object-fit: cover;" alt="Farm landscape">
+    <img src="{{ url_for('static', filename='cow-5287350_1280.jpg') }}" class="w-100 h-100" alt="Farm landscape">
     
     <!-- Centered content overlay -->
-    <div class="position-absolute top-50 start-50 translate-middle text-center text-white p-4 rounded bg-dark bg-opacity-75" style="max-width: 800px;">
+    <div class="position-absolute top-50 start-50 translate-middle text-center text-white p-4 rounded bg-dark bg-opacity-75 w-auto mw-100" style="max-width: 800px;">
         <h1 class="display-5 mb-4">Welcome to Farm Management Simulator</h1>
         
         <!-- Introduction cards -->

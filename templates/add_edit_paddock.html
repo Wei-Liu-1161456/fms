@@ -1,21 +1,27 @@
 {% extends "base.html" %}
+
 {% block title %}{% if paddock and paddock.id %}FMS - Edit Paddock{% else %}FMS - Add Paddock{% endif %}{% endblock %}
+
 {% block content %}
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
         <h2 class="mb-0">{% if paddock and paddock.id %}Edit Paddock{% else %}Add Paddock{% endif %}</h2>
     </div>
     <div class="card-body">
-        <!-- Add name requirements info -->
+        <!-- Name requirements info -->
         <div class="alert alert-info mb-4">
             <h5 class="alert-heading mb-2">Paddock Name Requirements:</h5>
             <ul class="mb-0">
                 <li>Must start with letters (e.g., "Barn", "Front")</li>
                 <li>Can optionally include numbers at the end (e.g., "Barn11" or "Barn 11")</li>
-                <li>No special characters or multiple spaces allowed</li>
+                <li>No special characters allowed</li>
+                <li>No leading or trailing spaces allowed</li>
+                <li>No multiple consecutive spaces allowed</li>
                 <li>Case sensitive (e.g., "Barn" and "barn" are treated as different names)</li>
+                <li>Name must be unique</li>
             </ul>
         </div>
+
         <!-- Add paddock form -->
         <div class="table-responsive">
             <form method="POST">
