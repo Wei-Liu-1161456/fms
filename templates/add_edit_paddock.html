@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block title %}{% if paddock and paddock.id %}FMS - Edit Paddock{% else %}FMS - Add Paddock{% endif %}{% endblock %}
-
 {% block content %}
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
@@ -22,7 +20,7 @@
             </ul>
         </div>
 
-        <!-- Add paddock form -->
+        <!-- Add/Edit paddock form -->
         <div class="table-responsive">
             <form method="POST">
                 <table class="table table-hover align-middle">

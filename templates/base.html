@@ -59,12 +59,9 @@
     <div class="container mt-4">         
         {% with messages = get_flashed_messages(with_categories=true) %}             
             {% if messages %}                 
-                <!-- Loop through flash messages and display them -->                 
                 {% for category, message in messages %}                     
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">                         
-                        <!-- Simply display the message without category-specific header -->                         
+                    <div class="alert {% if category == 'error' %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert">                         
                         {{ message }}                         
-                        <!-- Close button for the alert -->                         
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>                     
                     </div>                 
                 {% endfor %}             

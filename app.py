@@ -4,7 +4,7 @@ import mysql.connector
 import connect
 import re
 from pathlib import Path
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
 app = Flask(__name__)
 app.secret_key = 'COMP636 S2'
@@ -327,8 +327,6 @@ def add_paddock():
     # GET request: show the form
     return render_template("add_edit_paddock.html")
 
-from decimal import Decimal, ROUND_HALF_UP
-
 @app.route("/edit_paddock/<int:id>", methods=['GET', 'POST'])
 def edit_paddock(id):
     """
@@ -386,7 +384,7 @@ def edit_paddock(id):
             flash(f"Paddock '{name}' updated successfully.", "success")
             return redirect(url_for('paddocks'))
             
-        except (ValueError, decimal.InvalidOperation) as e:
+        except (ValueError, InvalidOperation) as e:
             flash(str(e), "error")
             return render_template("add_edit_paddock.html", 
                                 paddock={'id': id, 'name': name, 
