@@ -2,24 +2,29 @@
 {% block title %}FMS - Mobs{% endblock %}
 {% block content %}
 <div class="card shadow-sm">
+    <!-- Card header with Bootstrap classes -->
     <div class="card-header bg-primary text-white">
         <h2 class="mb-0">Mobs</h2>
     </div>
     <div class="card-body">
+        <!-- Responsive table using Bootstrap -->
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <!-- <th scope="col">Mob ID</th> -->
+                        <!-- Column headers -->
+                        <!-- Removed Mob ID column as it is commented out -->
                         <th scope="col">Mob Name</th>
                         <th scope="col">Current Paddock</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Loop through mobs data to display each mob's information -->
                     {% for mob in mobs %}
-                    <tr class="table-light">  <!-- setting default color table-light -->
-                        <!-- <td>{{ mob.id }}</td> -->
+                    <tr class="table-light">  <!-- Default row background color -->
+                        <!-- Mob Name -->
                         <td>{{ mob.name }}</td>
+                        <!-- Current Paddock Name -->
                         <td>{{ mob.paddock_name }}</td>
                     </tr>
                     {% endfor %}

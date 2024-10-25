@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% block title %}FMS - Paddocks{% endblock %}
-
 {% block content %}
 <div class="card shadow-sm">
+    <!-- Card header for paddocks -->
     <div class="card-header bg-primary text-white">
         <h2 class="mb-0">Paddocks</h2>
     </div>
     <div class="card-body">
+        <!-- Action buttons for adding paddock, moving to next day, and resetting data -->
         <div class="d-flex justify-content-start mb-3">
             <a href="{{ url_for('add_paddock') }}" class="btn btn-primary me-2">Add New Paddock</a>
             <a href="{{ url_for('next_day') }}" class="btn btn-primary me-2">Move to Next Day</a>
             <a href="{{ url_for('reset') }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to reset the data? This action cannot be undone.')">Reset</a>
         </div>
 
+        <!-- Table displaying paddock information -->
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
@@ -28,6 +30,7 @@
                 </thead>
                 <tbody>
                     {% for paddock in paddocks %}
+                    <!-- Row color based on DM/ha value for easy identification -->
                     <tr {% if paddock.dm_per_ha < 1500 %}class="table-danger"{% elif paddock.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
                         <td>{{ paddock.name }}</td>
                         <td>{{ paddock.area }}</td>
@@ -44,6 +47,7 @@
             </table>
         </div>
 
+        <!-- Explanation of DM/ha ranges with color-coded rows -->
         <div class="mt-3">
             <p>DM/ha (Dry Matter per Hectare): Measures available pasture in kilograms of dry matter per hectare.</p>
             <table class="table table-sm">

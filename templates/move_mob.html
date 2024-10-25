@@ -2,10 +2,12 @@
 {% block title %}FMS - Move Mob{% endblock %}
 {% block content %}
 <div class="card shadow-sm">
+    <!-- Header for the card -->
     <div class="card-header bg-primary text-white">
         <h2 class="mb-0">Move Mob</h2>
     </div>
     <div class="card-body">
+        <!-- Form for moving a mob to a new paddock -->
         <div class="table-responsive">
             <form method="POST">
                 <table class="table table-hover align-middle">
@@ -18,6 +20,7 @@
                     </thead>
                     <tbody>
                         <tr class="table-light">
+                            <!-- Dropdown for selecting a mob -->
                             <td class="col-4">
                                 <select name="mob_id" class="form-select" required>
                                     {% for mob in mobs %}
@@ -25,6 +28,7 @@
                                     {% endfor %}
                                 </select>
                             </td>
+                            <!-- Dropdown for selecting a new paddock -->
                             <td class="col-4">
                                 <select name="new_paddock_id" class="form-select" required>
                                     {% for paddock in paddocks %}
@@ -32,6 +36,7 @@
                                     {% endfor %}
                                 </select>
                             </td>
+                            <!-- Submit button to move the mob -->
                             <td class="col-4">
                                 <button type="submit" class="btn btn-primary me-2">Move Mob</button>
                             </td>
@@ -40,7 +45,8 @@
                 </table>
             </form>
         </div>
-        <!-- Current Distribution Section -->
+        
+        <!-- Section displaying the current distribution of mobs across paddocks -->
         <div class="mt-4">
             <h4 class="mb-3">Current Distribution</h4>
             <div class="table-responsive">
@@ -55,6 +61,7 @@
                     </thead>
                     <tbody>
                         {% for item in current_distribution %}
+                        <!-- Highlight rows based on paddock DM/ha values -->
                         <tr {% if item.dm_per_ha < 1500 %}class="table-danger"{% elif item.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
                             <td>{{ item.paddock_name }}</td>
                             <td>{{ item.mob_name if item.mob_name else '' }}</td>

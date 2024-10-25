@@ -1,55 +1,90 @@
-from flask import Flask
-from flask import render_template
-from flask import request
-from flask import redirect
-from flask import url_for
-from flask import session
-from flask import flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import date, datetime, timedelta
 import mysql.connector
 import connect
 import re
-
 from pathlib import Path
 
 app = Flask(__name__)
 app.secret_key = 'COMP636 S2'
 
-start_date = datetime(2024,10,29)
-pasture_growth_rate = 65    # kg DM/ha/day
-stock_consumption_rate = 14  # kg DM/animal/day
+# Global constants
+START_DATE = datetime(2024, 10, 29)
+PASTURE_GROWTH_RATE = 65    # kg DM/ha/day
+STOCK_CONSUMPTION_RATE = 14  # kg DM/animal/day
 
+# Database connection singleton
 db_connection = None
 
 def getCursor():
-    """Gets a new dictionary cursor for the database.
-    If necessary, a new database connection is created here and used for all
-    subsequent to getCursor()."""
+    """
+    Gets a new dictionary cursor for the database connection.
+    Creates a new connection if none exists or if the existing one is disconnected.
+    
+    Returns:
+        mysql.connector.cursor: A dictionary cursor for database operations
+    """
     global db_connection
  
     if db_connection is None or not db_connection.is_connected():
-        db_connection = mysql.connector.connect(user=connect.dbuser, \
-            password=connect.dbpass, host=connect.dbhost,
-            database=connect.dbname, autocommit=True)
+        db_connection = mysql.connector.connect(
+            user=connect.dbuser,
+            password=connect.dbpass, 
+            host=connect.dbhost,
+            database=connect.dbname, 
+            autocommit=True
+        )
        
-    cursor = db_connection.cursor(dictionary=True, buffered=False)
-    return cursor
+    return db_connection.cursor(dictionary=True, buffered=False)
 
 def get_date():
+    """
+    Retrieves the current system date from the database.
+    
+    Returns:
+        datetime: Current system date
+    """
     cursor = getCursor()        
     cursor.execute("SELECT curr_date FROM curr_date")        
-    curr_date = cursor.fetchone()['curr_date']        
-    return curr_date
+    return cursor.fetchone()['curr_date']
+
+def validate_paddock_name(name, id=None):
+    """
+    Validates paddock name format and uniqueness.
+    
+    Args:
+        name (str): Paddock name to validate
+        id (int, optional): Paddock ID for edit operations
+        
+    Returns:
+        tuple: (bool, str) - (is_valid, error_message)
+    """
+    cursor = getCursor()
+    
+    if not re.match(r'^[a-zA-Z]+(?:\s?\d+)?$', name.strip()):
+        return False, "Paddock name must start with letters and can optionally include numbers at the end."
+    
+    # Check name uniqueness
+    query = "SELECT name FROM paddocks WHERE BINARY name = %s"
+    params = [name]
+    if id:
+        query += " AND id != %s"
+        params.append(id)
+        
+    cursor.execute(query, tuple(params))
+    if cursor.fetchone():
+        return False, f"A paddock named '{name}' already exists."
+        
+    return True, ""
 
 @app.route("/")
 def home():
-    """Renders the home page with the current date."""
-    curr_date = get_date()
-    return render_template("home.html", curr_date=curr_date)
+    """Renders the home page with current date."""
+    return render_template("home.html", curr_date=get_date())
 
 @app.route("/mobs")
 def mobs():
-    """Retrieves all mobs with their associated paddock names and renders the mobs page."""
+    """Displays all mobs with their associated paddock names."""
     cursor = getCursor()
     cursor.execute("""
         SELECT m.name, p.name AS paddock_name
@@ -57,12 +92,11 @@ def mobs():
         JOIN paddocks p ON m.paddock_id = p.id 
         ORDER BY m.name
     """)
-    mobs = cursor.fetchall()
-    return render_template("mobs.html", mobs=mobs)
+    return render_template("mobs.html", mobs=cursor.fetchall())
 
 @app.route("/paddocks")
 def paddocks():
-    """Retrieves all paddocks with associated mob and stock information and renders the paddocks page."""
+    """Displays all paddocks with associated mob and stock information."""
     cursor = getCursor()
     cursor.execute("""
         SELECT 
@@ -78,14 +112,13 @@ def paddocks():
         ) s ON m.id = s.mob_id
         ORDER BY p.name
     """)
-    paddocks = cursor.fetchall()
-    return render_template("paddocks.html", paddocks=paddocks)
+    return render_template("paddocks.html", paddocks=cursor.fetchall())
 
 @app.route("/stock")
 def stock():
     """
-    Retrieves all stock (animals), grouped by mob, with mob details and animal details.
-    Mobs are in alphabetical order, and animals are in ID order within each mob.
+    Displays all stock grouped by mob, including mob details and animal statistics.
+    Orders mobs alphabetically and animals by ID within each mob.
     """
     cursor = getCursor()
     cursor.execute("""
@@ -102,30 +135,31 @@ def stock():
         LEFT JOIN stock s ON m.id = s.mob_id
         ORDER BY m.name, s.id
     """)
-    stock = cursor.fetchall()
-    return render_template("stock.html", stock=stock, current_date=get_date())
+    return render_template("stock.html", stock=cursor.fetchall(), current_date=get_date())
 
 @app.route("/next_day")
 def next_day():
     """
-    Advances the system to the next day, updating pasture levels and the current date.
+    Advances the system date by one day and updates pasture levels.
+    Takes into account pasture growth and stock consumption.
     """
     cursor = getCursor()
     curr_date = get_date()
     new_date = curr_date + timedelta(days=1)
     
     try:
-        # Update pasture levels
+        # Update pasture levels based on growth and consumption
         cursor.execute("""
             UPDATE paddocks p
             LEFT JOIN mobs m ON p.id = m.paddock_id
-            LEFT JOIN (SELECT mob_id, COUNT(*) as stock_count FROM stock GROUP BY mob_id) s ON m.id = s.mob_id
+            LEFT JOIN (SELECT mob_id, COUNT(*) as stock_count FROM stock GROUP BY mob_id) s 
+                ON m.id = s.mob_id
             SET p.total_dm = p.total_dm + (p.area * %s) - COALESCE(s.stock_count * %s, 0),
-                p.dm_per_ha = p.total_dm / p.area""", (pasture_growth_rate, stock_consumption_rate))
+                p.dm_per_ha = p.total_dm / p.area
+        """, (PASTURE_GROWTH_RATE, STOCK_CONSUMPTION_RATE))
         
-        # Update current date
+        # Update system date
         cursor.execute("UPDATE curr_date SET curr_date = %s", (new_date,))
-        
         db_connection.commit()
         flash(f"Advanced to next day: {new_date.strftime('%d %B %Y')}", "success")
     except mysql.connector.Error as err:
@@ -136,20 +170,15 @@ def next_day():
 
 @app.route("/reset")
 def reset():
-    """
-    Resets the data to its original state using the SQL script in fms-reset.sql.
-    """
+    """Resets the system to its initial state using fms-reset.sql script."""
     cursor = getCursor()
-    THIS_FOLDER = Path(__file__).parent.resolve()
     try:
-        with open(THIS_FOLDER / 'fms-reset.sql', 'r') as f:
-            sql_script = f.read()
-            for statement in sql_script.split(';'):
+        with open(Path(__file__).parent.resolve() / 'fms-reset.sql', 'r') as f:
+            for statement in f.read().split(';'):
                 if statement.strip():
                     cursor.execute(statement)
         db_connection.commit()
-        current_date = get_date()
-        flash(f"System has been reset to initial state. Current date is now {current_date.strftime('%d %B %Y')}.", "success")
+        flash(f"System has been reset to initial state. Current date is now {get_date().strftime('%d %B %Y')}.", "success")
     except Exception as e:
         db_connection.rollback()
         flash(f"Error resetting system: {str(e)}", "error")
@@ -158,23 +187,22 @@ def reset():
 @app.route("/move_mob", methods=['GET', 'POST'])
 def move_mob():
     """
-    Handles the movement of a mob to a new paddock.
-    GET: Displays the form for moving a mob.
-    POST: Processes the form submission and moves the mob.
+    Handles mob movement between paddocks.
+    GET: Shows the movement form
+    POST: Processes the movement request
     """
     cursor = getCursor()
     if request.method == 'POST':
         mob_id = request.form['mob_id']
         new_paddock_id = request.form['new_paddock_id']
         
-        # Check if the new paddock is empty
+        # Verify paddock availability
         cursor.execute("SELECT id FROM mobs WHERE paddock_id = %s", (new_paddock_id,))
-        occupied = cursor.fetchone()
-        if occupied:
-            flash("Cannot move mob. The selected paddock is already occupied.", "error")
+        if cursor.fetchone():
+            flash("Cannot move mob. Selected paddock is already occupied.", "error")
         else:
-            # Get mob and paddock details and perform move in one transaction
             try:
+                # Get movement details and perform move
                 cursor.execute("""
                     SELECT m.name as mob_name, 
                            p_old.name as old_paddock, 
@@ -186,15 +214,17 @@ def move_mob():
                 """, (new_paddock_id, mob_id))
                 move_details = cursor.fetchone()
                 
-                cursor.execute("UPDATE mobs SET paddock_id = %s WHERE id = %s", (new_paddock_id, mob_id))
+                cursor.execute("UPDATE mobs SET paddock_id = %s WHERE id = %s", 
+                             (new_paddock_id, mob_id))
                 db_connection.commit()
-                flash(f"{move_details['mob_name']} successfully moved from {move_details['old_paddock']} to {move_details['new_paddock']}.", "success")
+                flash(f"{move_details['mob_name']} moved from {move_details['old_paddock']} "
+                      f"to {move_details['new_paddock']}.", "success")
             except mysql.connector.Error as err:
                 db_connection.rollback()
                 flash(f"Failed to move mob: {err}", "error")
-        return redirect(url_for('mobs'))
+        return redirect(url_for('move_mob'))  # Changed from 'mobs' to 'move_mob'
     
-    # GET request: show the form and current distribution
+    # Prepare data for move_mob form
     cursor.execute("SELECT id, name FROM mobs")
     mobs = cursor.fetchall()
     
@@ -228,6 +258,11 @@ def move_mob():
 
 @app.route("/add_paddock", methods=['GET', 'POST'])
 def add_paddock():
+    """
+    Handles paddock creation.
+    GET: Shows the creation form
+    POST: Processes the creation request
+    """
     cursor = getCursor()
     
     if request.method == 'POST':
@@ -236,112 +271,70 @@ def add_paddock():
             area = float(request.form['area'])
             dm_per_ha = float(request.form['dm_per_ha'])
             total_dm = area * dm_per_ha if area > 0 and dm_per_ha > 0 else 0
-        except ValueError:
-            area = 0
-            dm_per_ha = 0
-            total_dm = 0
-
-        form_data = {
-            'name': name,
-            'area': request.form['area'],
-            'dm_per_ha': request.form['dm_per_ha'],
-            'total_dm': total_dm
-        }
-        
-        # Get next paddock ID
-        cursor.execute("SELECT MAX(id) as next_id FROM paddocks")
-        result = cursor.fetchone()
-        next_id = result['next_id'] + 1 if result['next_id'] else 1
-        form_data['id'] = next_id
-
-        # Validate paddock name format
-        if not re.match(r'^[a-zA-Z]+[a-zA-Z0-9\s]*$', name.strip()):
-            flash("Paddock name must start with a letter and can only contain letters, numbers and spaces.", "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
-
-        # Check if paddock name already exists
-        cursor.execute("SELECT name FROM paddocks WHERE BINARY name = %s", (name,))
-        existing_paddock = cursor.fetchone()
-        if existing_paddock:
-            flash(f"Cannot add paddock. A paddock named '{name}' already exists.", "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
-
-        try:
+            
+            # Validate input values
             if area <= 0 or dm_per_ha <= 0:
                 raise ValueError("Area and DM per ha must be positive numbers")
-
+                
+            # Validate paddock name
+            is_valid, error_message = validate_paddock_name(name)
+            if not is_valid:
+                flash(error_message, "error")
+                return render_template("add_edit_paddock.html", 
+                                    paddock={'name': name, 'area': area, 
+                                            'dm_per_ha': dm_per_ha})
+            
             cursor.execute("""
                 INSERT INTO paddocks (name, area, dm_per_ha, total_dm)
                 VALUES (%s, %s, %s, %s)
             """, (name, area, dm_per_ha, total_dm))
             db_connection.commit()
             flash("New paddock added successfully.", "success")
+            return redirect(url_for('paddocks'))
+            
         except ValueError as e:
             flash(str(e), "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
+            return render_template("add_edit_paddock.html", 
+                                paddock={'name': name, 'area': area, 
+                                        'dm_per_ha': dm_per_ha})
         except mysql.connector.Error as err:
             db_connection.rollback()
-            flash(f"Failed to add new paddock: {err}", "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
-        return redirect(url_for('paddocks'))
-
+            flash(f"Failed to add paddock: {err}", "error")
+            return redirect(url_for('paddocks'))
+    
     # GET request: show the form
-    cursor.execute("SELECT MAX(id) as next_id FROM paddocks")
-    result = cursor.fetchone()
-    next_id = result['next_id'] + 1 if result['next_id'] else 1
-    return render_template("add_edit_paddock.html", paddock={'id': next_id})
+    return render_template("add_edit_paddock.html")
 
 @app.route("/edit_paddock/<int:id>", methods=['GET', 'POST'])
 def edit_paddock(id):
+    """
+    Handles paddock editing.
+    GET: Shows the edit form
+    POST: Processes the edit request
+    
+    Args:
+        id (int): Paddock ID to edit
+    """
     cursor = getCursor()
+    
     if request.method == 'POST':
         name = request.form['name']
         try:
             area = float(request.form['area'])
             dm_per_ha = float(request.form['dm_per_ha'])
             total_dm = area * dm_per_ha if area > 0 and dm_per_ha > 0 else 0
-        except ValueError:
-            area = 0
-            dm_per_ha = 0
-            total_dm = 0
-
-        form_data = {
-            'id': id,
-            'name': name,
-            'area': request.form['area'],
-            'dm_per_ha': request.form['dm_per_ha'],
-            'total_dm': total_dm
-        }
-
-        # Validate paddock name format
-        if not re.match(r'^[a-zA-Z]+(?:\s?\d+)?$', name.strip()):
-            flash("Paddock name must start with letters and can optionally include numbers at the end (e.g., 'Barn' or 'Barn 11' or 'Barn11').", "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
-
-        # Get current paddock data
-        cursor.execute("SELECT * FROM paddocks WHERE id = %s", (id,))
-        current_paddock = cursor.fetchone()
-
-        # Check if any changes were made
-        try:
+            
             if area <= 0 or dm_per_ha <= 0:
                 raise ValueError("Area and DM per ha must be positive numbers")
-
-            # Compare current and new values
-            if (name == current_paddock['name'] and 
-                abs(float(area) - float(current_paddock['area'])) < 0.01 and 
-                abs(float(dm_per_ha) - float(current_paddock['dm_per_ha'])) < 0.01):
-                return redirect(url_for('paddocks'))
-
-            # Check if new name (if changed) already exists
-            if name != current_paddock['name']:
-                cursor.execute("SELECT name FROM paddocks WHERE BINARY name = %s AND id != %s", (name, id))
-                existing_paddock = cursor.fetchone()
-                if existing_paddock:
-                    flash(f"Cannot update paddock. A paddock named '{name}' already exists.", "error")
-                    return render_template("add_edit_paddock.html", paddock=form_data)
-
-            # Update paddock if changes were made
+            
+            # Validate paddock name
+            is_valid, error_message = validate_paddock_name(name, id)
+            if not is_valid:
+                flash(error_message, "error")
+                return render_template("add_edit_paddock.html", 
+                                    paddock={'name': name, 'area': area, 
+                                            'dm_per_ha': dm_per_ha})
+            
             cursor.execute("""
                 UPDATE paddocks
                 SET name = %s, area = %s, dm_per_ha = %s, total_dm = %s
@@ -349,22 +342,24 @@ def edit_paddock(id):
             """, (name, area, dm_per_ha, total_dm, id))
             db_connection.commit()
             flash("Paddock updated successfully.", "success")
-
+            return redirect(url_for('paddocks'))
+            
         except ValueError as e:
             flash(str(e), "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
+            return render_template("add_edit_paddock.html", 
+                                paddock={'name': name, 'area': area, 
+                                        'dm_per_ha': dm_per_ha})
         except mysql.connector.Error as err:
             db_connection.rollback()
             flash(f"Failed to update paddock: {err}", "error")
-            return render_template("add_edit_paddock.html", paddock=form_data)
-        return redirect(url_for('paddocks'))
-
+    
+    # Get existing paddock data for GET request
     cursor.execute("SELECT * FROM paddocks WHERE id = %s", (id,))
     paddock = cursor.fetchone()
     if not paddock:
         flash("Paddock not found.", "error")
         return redirect(url_for('paddocks'))
-
+    
     return render_template("add_edit_paddock.html", paddock=paddock)
 
 @app.context_processor

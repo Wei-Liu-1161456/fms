@@ -14,14 +14,15 @@
         {# Sort animals within each mob by stock_id #}
         {% set animals_sorted = animals|sort(attribute='stock_id') %}
         
+        <!-- Card for each mob containing stock details -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h2 class="h4 mb-0">
-                    {{ mob_name }}
+                    {{ mob_name }} <!-- Display mob name -->
                 </h2>
             </div>
             <div class="card-body">
-                {# Display mob details in a single row #}
+                <!-- Mob details displayed in a single row with paddock, number of stock, and average weight -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div><strong>Paddock:</strong> {{ animals[0].paddock_name }}</div>
                     <div><strong>Number of Stock:</strong> {{ animals|length }}</div>
@@ -30,12 +31,12 @@
                     </div>
                 </div>
                 
-                {# Table for displaying stock details #}
+                <!-- Table for displaying individual stock details -->
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Stock ID</th>
+                                <th>Animal ID</th>
                                 <th>Birth Date</th>
                                 <th>Age (years)</th>
                                 <th>Weight (kg)</th>

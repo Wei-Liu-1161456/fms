@@ -1,47 +1,47 @@
 {% extends "base.html" %}
+
 {% block title %}FMS - Home{% endblock %}
+
 {% block content %}
-
-<style>
-    .full-screen-image {
-        position: relative;
-        height: calc(100vh - 116px); /* Adjust this value based on your navbar height */
-        overflow: hidden;
-    }
-    .full-screen-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .centered-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        width: 100%;
-        padding: 20px;
-    }
-    .welcome-text {
-        font-size: 3vw;
-        color: #ffffff;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-        background-color: rgba(0,0,0,0.5);
-        padding: 20px;
-        border-radius: 10px;
-    }
-    @media (max-width: 768px) {
-        .welcome-text {
-            font-size: 6vw;
-        }
-    }
-</style>
-
-<div class="full-screen-image">
-    <img src="{{ url_for('static', filename='cow-5287350_1280.jpg') }}" alt="Farm landscape">
-    <div class="centered-text">
-        <h1 class="welcome-text">Welcome to Farm Management Simulator</h1>
+<!-- Hero section with background image -->
+<div class="position-relative overflow-hidden" style="height: 100vh;">
+    <!-- Background image -->
+    <img src="{{ url_for('static', filename='cow-5287350_1280.jpg') }}" class="w-100 h-100" style="object-fit: cover;" alt="Farm landscape">
+    
+    <!-- Centered content overlay -->
+    <div class="position-absolute top-50 start-50 translate-middle text-center text-white p-4 rounded bg-dark bg-opacity-75" style="max-width: 800px;">
+        <h1 class="display-5 mb-4">Welcome to Farm Management Simulator</h1>
+        
+        <!-- Introduction cards -->
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 bg-transparent border-light text-white">
+                    <div class="card-body d-flex flex-column">
+                        <i class="bi bi-calendar3 fs-3 mb-2"></i>
+                        <h5 class="card-title">Date: {{ get_date().strftime('%d %B %Y') }}</h5>
+                        <p class="card-text small">Track and manage your farm's daily operations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 bg-transparent border-light text-white">
+                    <div class="card-body d-flex flex-column">
+                        <i class="bi bi-graph-up fs-3 mb-2"></i>
+                        <h5 class="card-title">Pasture Management</h5>
+                        <p class="card-text small">Monitor grass growth and paddock conditions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 bg-transparent border-light text-white">
+                    <div class="card-body d-flex flex-column">
+                        <i class="bi bi-collection fs-3 mb-2"></i>
+                        <h5 class="card-title">Stock Control</h5>
+                        <p class="card-text small">Manage your mobs and track livestock</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
 {% endblock %}
