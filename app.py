@@ -214,6 +214,7 @@ def move_mob():
     POST: Processes the movement request
     """
     cursor = getCursor()
+    
     if request.method == 'POST':
         mob_id = request.form['mob_id']
         new_paddock_id = request.form['new_paddock_id']
@@ -226,33 +227,37 @@ def move_mob():
             try:
                 # Get movement details and perform move
                 cursor.execute("""
-                    SELECT m.name as mob_name, 
-                           p_old.name as old_paddock, 
-                           p_new.name as new_paddock
-                    FROM mobs m 
-                    JOIN paddocks p_old ON m.paddock_id = p_old.id
+                    SELECT m.name as mob_name,
+                            p_old.name as old_paddock,
+                            p_new.name as new_paddock
+                    FROM mobs m
+                     JOIN paddocks p_old ON m.paddock_id = p_old.id
                     JOIN paddocks p_new ON p_new.id = %s
                     WHERE m.id = %s
                 """, (new_paddock_id, mob_id))
                 move_details = cursor.fetchone()
                 
-                cursor.execute("UPDATE mobs SET paddock_id = %s WHERE id = %s", 
-                             (new_paddock_id, mob_id))
+                cursor.execute("UPDATE mobs SET paddock_id = %s WHERE id = %s",
+                              (new_paddock_id, mob_id))
                 db_connection.commit()
                 flash(f"{move_details['mob_name']} moved from {move_details['old_paddock']} "
                       f"to {move_details['new_paddock']}.", "success")
             except mysql.connector.Error as err:
                 db_connection.rollback()
                 flash(f"Failed to move mob: {err}", "error")
-        return redirect(url_for('move_mob'))  # Changed from 'mobs' to 'move_mob'
-    
+        return redirect(url_for('paddocks'))
+
     # Prepare data for move_mob form
-    cursor.execute("SELECT id, name FROM mobs")
+    cursor.execute("""
+        SELECT id, name 
+        FROM mobs 
+        WHERE paddock_id IS NOT NULL
+    """)
     mobs = cursor.fetchall()
     
     cursor.execute("""
         SELECT id, name 
-        FROM paddocks 
+        FROM paddocks
         WHERE id NOT IN (SELECT paddock_id FROM mobs WHERE paddock_id IS NOT NULL)
     """)
     available_paddocks = cursor.fetchall()
@@ -270,10 +275,10 @@ def move_mob():
         ORDER BY p.name
     """)
     current_distribution = cursor.fetchall()
-
+    
     return render_template(
-        "move_mob.html", 
-        mobs=mobs, 
+        "move_mob.html",
+        mobs=mobs,
         paddocks=available_paddocks,
         current_distribution=current_distribution
     )
