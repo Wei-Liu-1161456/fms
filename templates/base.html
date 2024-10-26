@@ -47,12 +47,15 @@
                     <li class="nav-item">
                         <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'paddocks' else '' }}" href="{{ url_for('paddocks') }}">Paddocks</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active bg-success text-white fw-bold' if request.endpoint == 'move_mob' else '' }}" href="{{ url_for('move_mob') }}">Move Mob</a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Flash messages (alerts) -->     
+   <!-- Flash messages (alerts) -->     
     <div class="container mt-4">         
         {% with messages = get_flashed_messages(with_categories=true) %}             
             {% if messages %}                 

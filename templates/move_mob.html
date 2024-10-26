@@ -2,23 +2,12 @@
 {% block title %}FMS - Move Mob{% endblock %}
 {% block content %}
 <div class="card shadow-sm">
+    <!-- Header for the card -->
     <div class="card-header bg-primary text-white">
         <h2 class="mb-0">Move Mob</h2>
     </div>
     <div class="card-body">
-        <!-- Status alerts for current paddocks -->
-        {% for mob in mobs %}
-            {% if mob.dm_per_ha < 1500 %}
-                <div class="alert alert-danger mb-3">
-                    <strong>Critical:</strong> {{ mob.name }} needs immediate movement. Current paddock DM/ha is {{ mob.dm_per_ha|round(2) }} kg.
-                </div>
-            {% elif mob.dm_per_ha < 1800 %}
-                <div class="alert alert-warning mb-3">
-                    <strong>Warning:</strong> Consider moving {{ mob.name }}. Current paddock DM/ha is {{ mob.dm_per_ha|round(2) }} kg.
-                </div>
-            {% endif %}
-        {% endfor %}
-
+        <!-- Form for moving a mob to a new paddock -->
         <div class="table-responsive">
             <form method="POST">
                 <table class="table table-hover align-middle">
@@ -31,41 +20,32 @@
                     </thead>
                     <tbody>
                         <tr class="table-light">
+                            <!-- Dropdown for selecting a mob -->
                             <td class="col-4">
                                 <select name="mob_id" class="form-select" required>
                                     {% for mob in mobs %}
-                                        <option value="{{ mob.id }}">
-                                            {{ mob.name }} - Current DM/ha: {{ mob.dm_per_ha|round(2) }} kg
-                                        </option>
+                                        <option value="{{ mob.id }}">{{ mob.name }}</option>
                                     {% endfor %}
                                 </select>
                             </td>
+                            <!-- Dropdown for selecting a new paddock -->
                             <td class="col-4">
                                 <select name="new_paddock_id" class="form-select" required>
                                     {% for paddock in paddocks %}
-                                        <option value="{{ paddock.id }}" 
-                                                class="{% if paddock.dm_per_ha < 1500 %}text-danger{% elif paddock.dm_per_ha < 1800 %}text-warning{% endif %}">
-                                            {{ paddock.name }} - DM/ha: {{ paddock.dm_per_ha|round(2) }} kg
-                                            {% if paddock.dm_per_ha >= 1800 %}
-                                                (Good)
-                                            {% elif paddock.dm_per_ha >= 1500 %}
-                                                (Warning)
-                                            {% else %}
-                                                (Critical)
-                                            {% endif %}
-                                        </option>
+                                        <option value="{{ paddock.id }}">{{ paddock.name }}</option>
                                     {% endfor %}
                                 </select>
                             </td>
+                            <!-- Submit button to move the mob -->
                             <td class="col-4">
                                 <button type="submit" class="btn btn-primary me-2">Move Mob</button>
-                                <a href="{{ url_for('paddocks') }}" class="btn btn-secondary">Cancel</a>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </form>
         </div>
+        
         <!-- Section displaying the current distribution of mobs across paddocks -->
         <div class="mt-4">
             <h4 class="mb-3">Current Distribution</h4>
@@ -73,8 +53,8 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Mob Name</th>
                             <th scope="col">Paddock Name</th>
+                            <th scope="col">Mob Name</th>
                             <th scope="col">Stock Count</th>
                             <th scope="col">Paddock DM/ha</th>
                         </tr>
@@ -83,8 +63,8 @@
                         {% for item in current_distribution %}
                         <!-- Highlight rows based on paddock DM/ha values -->
                         <tr {% if item.dm_per_ha < 1500 %}class="table-danger"{% elif item.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
-                            <td>{{ item.mob_name if item.mob_name else '' }}</td>
                             <td>{{ item.paddock_name }}</td>
+                            <td>{{ item.mob_name if item.mob_name else '' }}</td>
                             <td>{{ item.stock_count if item.stock_count else '0' }}</td>
                             <td>{{ item.dm_per_ha|round(2) }}</td>
                         </tr>
