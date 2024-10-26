@@ -213,46 +213,76 @@ def move_mob():
     Shows status for both current and available paddocks.
     """
     cursor = getCursor()
+    
     if request.method == 'POST':
-        # POST handling remains the same
-        ...
 
-    # Get mobs with their current paddock information
+        mob_id = request.form['mob_id']
+        new_paddock_id = request.form['new_paddock_id']
+        
+        # Verify paddock availability
+        cursor.execute("SELECT id FROM mobs WHERE paddock_id = %s", (new_paddock_id,))
+        if cursor.fetchone():
+            flash("Cannot move mob. Selected paddock is already occupied.", "error")
+        else:
+            try:
+                # Get movement details and perform move
+                cursor.execute("""
+                    SELECT m.name as mob_name,
+                            p_old.name as old_paddock,
+                            p_new.name as new_paddock
+                    FROM mobs m
+                     JOIN paddocks p_old ON m.paddock_id = p_old.id
+                    JOIN paddocks p_new ON p_new.id = %s
+                    WHERE m.id = %s
+                """, (new_paddock_id, mob_id))
+                move_details = cursor.fetchone()
+                
+                cursor.execute("UPDATE mobs SET paddock_id = %s WHERE id = %s",
+                              (new_paddock_id, mob_id))
+                db_connection.commit()
+                flash(f"{move_details['mob_name']} moved from {move_details['old_paddock']} "
+                      f"to {move_details['new_paddock']}.", "success")
+            except mysql.connector.Error as err:
+                db_connection.rollback()
+                flash(f"Failed to move mob: {err}", "error")
+        return redirect(url_for('paddocks'))
+
+    # Prepare data for move_mob form
     cursor.execute("""
-        SELECT 
-            m.id,
-            m.name,
-            p.name AS paddock_name,
-            p.dm_per_ha,
-            COUNT(s.id) AS stock_count
-        FROM mobs m
-        JOIN paddocks p ON m.paddock_id = p.id
-        LEFT JOIN stock s ON m.id = s.mob_id
-        GROUP BY m.id, m.name, p.name, p.dm_per_ha
-        ORDER BY LOWER(m.name)
+        SELECT id, name 
+        FROM mobs 
+        WHERE paddock_id IS NOT NULL
     """)
     mobs = cursor.fetchall()
     
     # Get available paddocks with DM/ha information
     cursor.execute("""
-        SELECT 
-            id, 
-            name,
-            dm_per_ha
-        FROM paddocks 
-        WHERE id NOT IN (
-            SELECT paddock_id 
-            FROM mobs 
-            WHERE paddock_id IS NOT NULL
-        )
-        ORDER BY LOWER(name)
+
+        SELECT id, name 
+        FROM paddocks
+        WHERE id NOT IN (SELECT paddock_id FROM mobs WHERE paddock_id IS NOT NULL)
     """)
     available_paddocks = cursor.fetchall()
     
+    cursor.execute("""
+        SELECT 
+            p.name AS paddock_name,
+            p.dm_per_ha,
+            m.name AS mob_name,
+            COUNT(s.id) AS stock_count
+        FROM paddocks p
+        LEFT JOIN mobs m ON p.id = m.paddock_id
+        LEFT JOIN stock s ON m.id = s.mob_id
+        GROUP BY p.name, p.dm_per_ha, m.name
+        ORDER BY p.name
+    """)
+    current_distribution = cursor.fetchall()
+    
     return render_template(
-        "move_mob.html", 
+        "move_mob.html",
         mobs=mobs,
-        paddocks=available_paddocks
+        paddocks=available_paddocks,
+        current_distribution=current_distribution
     )
 
 @app.route("/add_paddock", methods=['GET', 'POST'])
@@ -267,35 +297,36 @@ def add_paddock():
     if request.method == 'POST':
         name = request.form['name']
         try:
-            area = float(request.form['area'])
-            dm_per_ha = float(request.form['dm_per_ha'])
-            total_dm = area * dm_per_ha if area > 0 and dm_per_ha > 0 else 0
+            # Convert string inputs to Decimal for precise calculation
+            area = Decimal(request.form['area']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            dm_per_ha = Decimal(request.form['dm_per_ha']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
             # Validate input values
             if area <= 0 or dm_per_ha <= 0:
-                raise ValueError("Area and DM per ha must be positive numbers")
+                raise ValueError("Area and Dry Matter per hectare must be positive numbers")
                 
             # Validate paddock name
             is_valid, error_message = validate_paddock_name(name)
             if not is_valid:
                 flash(error_message, "error")
                 return render_template("add_edit_paddock.html", 
-                                    paddock={'name': name, 'area': area, 
-                                            'dm_per_ha': dm_per_ha})
+                                    paddock={'name': name, 'area': str(area), 
+                                            'dm_per_ha': str(dm_per_ha)})
             
             cursor.execute("""
                 INSERT INTO paddocks (name, area, dm_per_ha, total_dm)
                 VALUES (%s, %s, %s, %s)
-            """, (name, area, dm_per_ha, total_dm))
+            """, (name, float(area), float(dm_per_ha), float(total_dm)))
             db_connection.commit()
             flash(f"Paddock '{name}' added successfully.", "success")
             return redirect(url_for('paddocks'))
             
-        except ValueError as e:
+        except (ValueError, InvalidOperation) as e:
             flash(str(e), "error")
             return render_template("add_edit_paddock.html", 
-                                paddock={'name': name, 'area': area, 
-                                        'dm_per_ha': dm_per_ha})
+                                paddock={'name': name, 'area': request.form['area'], 
+                                        'dm_per_ha': request.form['dm_per_ha']})
         except mysql.connector.Error as err:
             db_connection.rollback()
             flash(f"Failed to add paddock: {err}", "error")
@@ -322,10 +353,10 @@ def edit_paddock(id):
             # Convert string inputs to Decimal for precise calculation
             area = Decimal(request.form['area']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             dm_per_ha = Decimal(request.form['dm_per_ha']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if area > 0 and dm_per_ha > 0 else Decimal('0')
+            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
             if area <= 0 or dm_per_ha <= 0:
-                raise ValueError("Area and DM per ha must be positive numbers")
+                raise ValueError("Area and Dry Matter per hectare must be positive numbers")
             
             # Validate paddock name
             is_valid, error_message = validate_paddock_name(name, id)
@@ -343,6 +374,7 @@ def edit_paddock(id):
             # Convert current values to Decimal for comparison
             current_area = Decimal(str(current_paddock['area'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             current_dm_per_ha = Decimal(str(current_paddock['dm_per_ha'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            current_total_dm = (current_area * current_dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
             # Check if any values have changed
             if (name == current_paddock['name'] and 

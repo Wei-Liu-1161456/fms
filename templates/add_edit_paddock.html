@@ -41,18 +41,36 @@
                         </tr>
                         <tr class="table-light">
                             <td>
-                                <label for="area">Area (ha):</label>
+                                <label for="area">Area (hectares):</label>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.01" value="{{ paddock.area if paddock else '' }}" required>
+                                <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.1" 
+                                       value="{{ paddock.area|round(2) if paddock else '' }}" 
+                                       oninput="document.getElementById('total_dm').innerText = (Math.round((this.value * document.getElementById('dm_per_ha').value) * 100) / 100).toFixed(2)" required>
                             </td>
                         </tr>
                         <tr class="table-light">
                             <td>
-                                <label for="dm_per_ha">DM per ha (kg):</label>
+                                <label for="dm_per_ha">Dry Matter per hectare (kg):</label>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.01" value="{{ paddock.dm_per_ha if paddock else '' }}" required>
+                                <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.1" 
+                                       value="{{ paddock.dm_per_ha|round(2) if paddock else '' }}" 
+                                       oninput="document.getElementById('total_dm').innerText = (Math.round((this.value * document.getElementById('area').value) * 100) / 100).toFixed(2)" required>
+                            </td>
+                        </tr>
+                        <tr class="table-light">
+                            <td>
+                                <label>Total Dry Matter (kg):</label>
+                            </td>
+                            <td>
+                                <span id="total_dm" class="form-control-plaintext">
+                                    {% if paddock and paddock.area and paddock.dm_per_ha %}
+                                        {{ (paddock.area * paddock.dm_per_ha)|round(2) }}
+                                    {% else %}
+                                        0.00
+                                    {% endif %}
+                                </span>
                             </td>
                         </tr>
                         <tr class="table-light">
