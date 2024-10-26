@@ -53,8 +53,8 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Paddock Name</th>
                             <th scope="col">Mob Name</th>
+                            <th scope="col">Paddock Name</th>
                             <th scope="col">Stock Count</th>
                             <th scope="col">Paddock DM/ha</th>
                         </tr>
@@ -63,8 +63,8 @@
                         {% for item in current_distribution %}
                         <!-- Highlight rows based on paddock DM/ha values -->
                         <tr {% if item.dm_per_ha < 1500 %}class="table-danger"{% elif item.dm_per_ha < 1800 %}class="table-warning"{% else %}class="table-light"{% endif %}>
-                            <td>{{ item.paddock_name }}</td>
                             <td>{{ item.mob_name if item.mob_name else '' }}</td>
+                            <td>{{ item.paddock_name }}</td>
                             <td>{{ item.stock_count if item.stock_count else '0' }}</td>
                             <td>{{ item.dm_per_ha|round(2) }}</td>
                         </tr>
