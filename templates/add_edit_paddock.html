@@ -44,7 +44,7 @@
                                 <label for="area">Area (ha):</label>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.01" value="{{ paddock.area if paddock else '' }}" required>
+                                <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.1" value="{{ paddock.area if paddock else '' }}" required>
                             </td>
                         </tr>
                         <tr class="table-light">
@@ -52,7 +52,7 @@
                                 <label for="dm_per_ha">DM per ha (kg):</label>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.01" value="{{ paddock.dm_per_ha if paddock else '' }}" required>
+                                <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="1800" value="{{ paddock.dm_per_ha if paddock else '' }}" required>
                             </td>
                         </tr>
                         <tr class="table-light">

@@ -42,12 +42,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {# Loop through each animal in the mob and display its details #}
                             {% for animal in animals_sorted %}
                                 <tr class="table-light">
                                     <td>{{ animal.stock_id }}</td>
                                     <td>{{ animal.dob.strftime('%d-%m-%Y') }}</td>
-                                    <td>{{ ((current_date - animal.dob).days / 365)|round(2) }}</td>
+                                    <td>{{ animal.age }}</td>
                                     <td>{{ animal.weight }}</td>
                                 </tr>
                             {% endfor %}
