@@ -210,8 +210,7 @@ def reset():
 def move_mob():
     """
     Handles mob movement between paddocks.
-    GET: Shows the movement form
-    POST: Processes the movement request
+    Shows alerts for mobs that need to be moved based on paddock conditions.
     """
     cursor = getCursor()
     if request.method == 'POST':
@@ -241,42 +240,53 @@ def move_mob():
                 db_connection.commit()
                 flash(f"{move_details['mob_name']} moved from {move_details['old_paddock']} "
                       f"to {move_details['new_paddock']}.", "success")
+                return redirect(url_for('paddocks'))
             except mysql.connector.Error as err:
                 db_connection.rollback()
                 flash(f"Failed to move mob: {err}", "error")
-        return redirect(url_for('move_mob'))  # Changed from 'mobs' to 'move_mob'
+                return redirect(url_for('paddocks'))
     
-    # Prepare data for move_mob form
-    cursor.execute("SELECT id, name FROM mobs")
-    mobs = cursor.fetchall()
+    # Get mobs with their current paddock information
+    cursor.execute("""
+        SELECT 
+            m.id,
+            m.name,
+            p.name AS paddock_name,
+            p.dm_per_ha,
+            COUNT(s.id) AS stock_count
+        FROM mobs m
+        JOIN paddocks p ON m.paddock_id = p.id
+        LEFT JOIN stock s ON m.id = s.mob_id
+        GROUP BY m.id, m.name, p.name, p.dm_per_ha
+        ORDER BY m.name
+    """)
+    mobs_data = cursor.fetchall()
     
+    # Format mob data with paddock info
+    mobs = []
+    for mob in mobs_data:
+        mobs.append({
+            'id': mob['id'],
+            'name': mob['name'],
+            'paddock_info': {
+                'name': mob['paddock_name'],
+                'dm_per_ha': mob['dm_per_ha'],
+                'stock_count': mob['stock_count']
+            }
+        })
+    
+    # Get available paddocks
     cursor.execute("""
         SELECT id, name 
         FROM paddocks 
         WHERE id NOT IN (SELECT paddock_id FROM mobs WHERE paddock_id IS NOT NULL)
+        ORDER BY name
     """)
     available_paddocks = cursor.fetchall()
     
-    cursor.execute("""
-        SELECT 
-            p.name AS paddock_name,
-            p.dm_per_ha,
-            m.name AS mob_name,
-            COUNT(s.id) AS stock_count
-        FROM paddocks p
-        LEFT JOIN mobs m ON p.id = m.paddock_id
-        LEFT JOIN stock s ON m.id = s.mob_id
-        GROUP BY p.name, p.dm_per_ha, m.name
-        ORDER BY p.name
-    """)
-    current_distribution = cursor.fetchall()
-
-    return render_template(
-        "move_mob.html", 
-        mobs=mobs, 
-        paddocks=available_paddocks,
-        current_distribution=current_distribution
-    )
+    return render_template("move_mob.html", 
+                         mobs=mobs,
+                         paddocks=available_paddocks)
 
 @app.route("/add_paddock", methods=['GET', 'POST'])
 def add_paddock():
