@@ -45,8 +45,8 @@
                             </td>
                             <td>
                                 <input type="number" class="form-control" id="area" name="area" step="0.01" min="0.1" 
-                                       value="{{ paddock.area if paddock else '' }}" 
-                                       oninput="document.getElementById('total_dm').innerText = (this.value * document.getElementById('dm_per_ha').value).toFixed(2)" required>
+                                       value="{{ paddock.area|round(2) if paddock else '' }}" 
+                                       oninput="document.getElementById('total_dm').innerText = (Math.round((this.value * document.getElementById('dm_per_ha').value) * 100) / 100).toFixed(2)" required>
                             </td>
                         </tr>
                         <tr class="table-light">
@@ -55,8 +55,8 @@
                             </td>
                             <td>
                                 <input type="number" class="form-control" id="dm_per_ha" name="dm_per_ha" step="0.01" min="0.1" 
-                                       value="{{ paddock.dm_per_ha if paddock else '' }}" 
-                                       oninput="document.getElementById('total_dm').innerText = (this.value * document.getElementById('area').value).toFixed(2)" required>
+                                       value="{{ paddock.dm_per_ha|round(2) if paddock else '' }}" 
+                                       oninput="document.getElementById('total_dm').innerText = (Math.round((this.value * document.getElementById('area').value) * 100) / 100).toFixed(2)" required>
                             </td>
                         </tr>
                         <tr class="table-light">

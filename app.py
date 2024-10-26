@@ -295,35 +295,36 @@ def add_paddock():
     if request.method == 'POST':
         name = request.form['name']
         try:
-            area = float(request.form['area'])
-            dm_per_ha = float(request.form['dm_per_ha'])
-            total_dm = area * dm_per_ha if area > 0 and dm_per_ha > 0 else 0
+            # Convert string inputs to Decimal for precise calculation
+            area = Decimal(request.form['area']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            dm_per_ha = Decimal(request.form['dm_per_ha']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
             # Validate input values
             if area <= 0 or dm_per_ha <= 0:
-                raise ValueError("Area and DM per ha must be positive numbers")
+                raise ValueError("Area and Dry Matter per hectare must be positive numbers")
                 
             # Validate paddock name
             is_valid, error_message = validate_paddock_name(name)
             if not is_valid:
                 flash(error_message, "error")
                 return render_template("add_edit_paddock.html", 
-                                    paddock={'name': name, 'area': area, 
-                                            'dm_per_ha': dm_per_ha})
+                                    paddock={'name': name, 'area': str(area), 
+                                            'dm_per_ha': str(dm_per_ha)})
             
             cursor.execute("""
                 INSERT INTO paddocks (name, area, dm_per_ha, total_dm)
                 VALUES (%s, %s, %s, %s)
-            """, (name, area, dm_per_ha, total_dm))
+            """, (name, float(area), float(dm_per_ha), float(total_dm)))
             db_connection.commit()
             flash(f"Paddock '{name}' added successfully.", "success")
             return redirect(url_for('paddocks'))
             
-        except ValueError as e:
+        except (ValueError, InvalidOperation) as e:
             flash(str(e), "error")
             return render_template("add_edit_paddock.html", 
-                                paddock={'name': name, 'area': area, 
-                                        'dm_per_ha': dm_per_ha})
+                                paddock={'name': name, 'area': request.form['area'], 
+                                        'dm_per_ha': request.form['dm_per_ha']})
         except mysql.connector.Error as err:
             db_connection.rollback()
             flash(f"Failed to add paddock: {err}", "error")
@@ -350,10 +351,10 @@ def edit_paddock(id):
             # Convert string inputs to Decimal for precise calculation
             area = Decimal(request.form['area']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             dm_per_ha = Decimal(request.form['dm_per_ha']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if area > 0 and dm_per_ha > 0 else Decimal('0')
+            total_dm = (area * dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
             if area <= 0 or dm_per_ha <= 0:
-                raise ValueError("Area and DM per ha must be positive numbers")
+                raise ValueError("Area and Dry Matter per hectare must be positive numbers")
             
             # Validate paddock name
             is_valid, error_message = validate_paddock_name(name, id)
@@ -371,6 +372,7 @@ def edit_paddock(id):
             # Convert current values to Decimal for comparison
             current_area = Decimal(str(current_paddock['area'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             current_dm_per_ha = Decimal(str(current_paddock['dm_per_ha'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            current_total_dm = (current_area * current_dm_per_ha).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
             # Check if any values have changed
             if (name == current_paddock['name'] and 
